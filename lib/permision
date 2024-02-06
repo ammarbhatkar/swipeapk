@@ -1,0 +1,273 @@
+// // ignore_for_file: use_build_context_synchronously, prefer_const_constructors
+
+// import 'dart:math';
+
+// import 'package:flutter/cupertino.dart';
+// import 'package:flutter/material.dart';
+// import 'package:permission_handler/permission_handler.dart';
+// import 'package:swype/util/permision_denied_dialog.dart';
+// import 'package:swype/views/face_detector_view.dart';
+// import 'package:swype/views/painters/camera_view.dart';
+
+// class HomeView extends StatefulWidget {
+//   const HomeView({super.key});
+
+//   @override
+//   State<HomeView> createState() => _HomeViewState();
+// }
+
+// class _HomeViewState extends State<HomeView> {
+//   bool serviceEnabled = false;
+//   bool cameraPermissionDenied = false;
+//   bool cameraPermissionRequested = false;
+//   bool locationPermissionRequested = false;
+//   @override
+//   Widget build(BuildContext context) {
+//     return SafeArea(
+//         child: Scaffold(
+//       body: Container(
+//         child: ElevatedButton(
+//           onPressed: () async {
+//             try {
+//               if (!cameraPermissionRequested) {
+//                 var status = await Permission.camera.request();
+//                 cameraPermissionRequested = true;
+
+//                 if (status.isGranted) {
+//                   try {
+//                     if (!locationPermissionRequested) {
+//                       var location = await Permission.location.request();
+//                       locationPermissionRequested = true;
+//                       if (location.isGranted) {
+//                         setState(() {
+//                           serviceEnabled = true;
+//                         });
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (context) => FaceDetectorView(
+//                               serviceEnabled: serviceEnabled,
+//                             ),
+//                           ),
+//                         );
+//                       } else if (location.isDenied) {
+//                         print("Location Dneid $location");
+//                       }
+//                     } else {
+//                       var location = await Permission.location.status;
+//                       if (location.isGranted) {
+//                         setState(() {
+//                           serviceEnabled = true;
+//                           print("Setting Service Enabled to :$serviceEnabled");
+//                         });
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (context) {
+//                               return FaceDetectorView(
+//                                   serviceEnabled: serviceEnabled);
+//                             },
+//                           ),
+//                         );
+//                       } else if (location.isDenied) {
+//                         DialogUtils.showPermissionDeniedDialog(
+//                             context, "Location");
+//                       }
+//                     }
+//                   } catch (e) {}
+//                   // If permission is granted, navigate to FaceDetectorView
+//                 } else if (status.isDenied) {
+//                   // Handle the case where permission is denied
+//                   print("Camera permission denied");
+//                 }
+//               } else {
+//                 // Camera permission has been requested before, check current status
+//                 var status = await Permission.camera.status;
+//                 if (status.isGranted) {
+//                   try {
+//                     if (!locationPermissionRequested) {
+//                       var location = await Permission.location.request();
+//                       locationPermissionRequested = true;
+//                       if (location.isGranted) {
+//                         setState(() {
+//                           serviceEnabled = true;
+//                         });
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (context) => FaceDetectorView(
+//                               serviceEnabled: serviceEnabled,
+//                             ),
+//                           ),
+//                         );
+//                       } else if (location.isDenied) {
+//                         print("Location Dneid $location");
+//                       }
+//                     } else {
+//                       var location = await Permission.location.status;
+//                       if (location.isGranted) {
+//                         setState(() {
+//                           serviceEnabled = true;
+//                           print("Setting Service Enabled to :$serviceEnabled");
+//                         });
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (context) {
+//                               return FaceDetectorView(
+//                                   serviceEnabled: serviceEnabled);
+//                             },
+//                           ),
+//                         );
+//                       } else if (location.isDenied) {
+//                         DialogUtils.showPermissionDeniedDialog(
+//                             context, "Location");
+//                       }
+//                     }
+//                   } catch (e) {}
+//                 } else if (status.isDenied) {
+//                   // Camera permission denied, show dialog
+//                   DialogUtils.showPermissionDeniedDialog(context, "Camera");
+//                 }
+//               }
+//               // Check and request camera permission
+//             } catch (e) {
+//               // Handle other exceptions
+//               print("Exception occurred: $e");
+//             }
+//           },
+//           child: Text("Camera"),
+//         ),
+//       ),
+//     ));
+//   }
+// }
+//   // try {
+//   //                 var location = await Permission.location.request();
+//   //                 if (location.isGranted) {
+//   //                   setState(() {
+//   //                     serviceEnabled = true;
+//   //                     Navigator.push(
+//   //                       context,
+//   //                       MaterialPageRoute(
+//   //                           builder: (context) => FaceDetectorView(
+//   //                                 serviceEnabled: serviceEnabled,
+//   //                               )),
+//   //                     );
+
+//   //                     print(" Service enabled: $serviceEnabled");
+//   //                   });
+//   //                 } else if (location.isDenied) {
+//   //                   showDialog(
+//   //                     context: context,
+//   //                     builder: (BuildContext context) {
+//   //                       return AlertDialog(
+//   //                         title: Text("Permission Denied"),
+//   //                         content:
+//   //                             Text("Please allow to acess device location"),
+//   //                         actions: [
+//   //                           TextButton(
+//   //                             onPressed: () {
+//   //                               Navigator.of(context).pop(); // Close the dialog
+//   //                             },
+//   //                             child: Text("Cancel"),
+//   //                           ),
+//   //                           TextButton(
+//   //                             onPressed: () {
+//   //                               Navigator.of(context).pop(); // Close the dialog
+//   //                               openAppSettings(); // Open app settings to allow the user to grant permission
+//   //                             },
+//   //                             child: Text("Settings"),
+//   //                           ),
+//   //                         ],
+//   //                       );
+//   //                     },
+//   //                   );
+//   //                 }
+//   //               } catch (e) {}
+//   //             }
+
+
+
+// //  showDialog(
+// //                         context: context,
+// //                         builder: (BuildContext context) {
+// //                           return AlertDialog(
+// //                             title: Text("Permission Denied"),
+// //                             content:
+// //                                 Text("Please allow to acess device location"),
+// //                             actions: [
+// //                               TextButton(
+// //                                 onPressed: () {
+// //                                   Navigator.of(context)
+// //                                       .pop(); // Close the dialog
+// //                                 },
+// //                                 child: Text("Cancel"),
+// //                               ),
+// //                               TextButton(
+// //                                 onPressed: () {
+// //                                   Navigator.of(context)
+// //                                       .pop(); // Close the dialog
+// //                                   openAppSettings(); // Open app settings to allow the user to grant permission
+// //                                 },
+// //                                 child: Text("Settings"),
+// //                               ),
+// //                             ],
+// //                           );
+// //                         },
+// //                       );
+
+
+// //  try {
+// //                     if (cameraPermissionDenied == false &&
+// //                         locationPermissionRequested == false) {
+// //                       var location = await Permission.location.request();
+// //                       if (location.isGranted) {
+// //                         setState(() {
+// //                           serviceEnabled = true;
+// //                           Navigator.push(
+// //                             context,
+// //                             MaterialPageRoute(
+// //                                 builder: (context) => FaceDetectorView(
+// //                                       serviceEnabled: serviceEnabled,
+// //                                     )),
+// //                           );
+
+// //                           print(" Service enabled: $serviceEnabled");
+// //                         });
+// //                       } else {
+// //                         setState(() {
+// //                           locationPermissionRequested = true;
+// //                         });
+// //                       }
+// //                     } else if (locationPermissionRequested == true &&
+// //                         cameraPermissionDenied == false) {
+// //                       showDialog(
+// //                         context: context,
+// //                         builder: (BuildContext context) {
+// //                           return AlertDialog(
+// //                             title: Text("Permission Denied"),
+// //                             content:
+// //                                 Text("Please allow to acess device location"),
+// //                             actions: [
+// //                               TextButton(
+// //                                 onPressed: () {
+// //                                   Navigator.of(context)
+// //                                       .pop(); // Close the dialog
+// //                                 },
+// //                                 child: Text("Cancel"),
+// //                               ),
+// //                               TextButton(
+// //                                 onPressed: () {
+// //                                   Navigator.of(context)
+// //                                       .pop(); // Close the dialog
+// //                                   openAppSettings(); // Open app settings to allow the user to grant permission
+// //                                 },
+// //                                 child: Text("Settings"),
+// //                               ),
+// //                             ],
+// //                           );
+// //                         },
+// //                       );
+// //                     }
+// //                   } catch (e) {}

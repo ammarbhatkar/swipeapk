@@ -1,0 +1,185 @@
+
+  Future<void> _detectFacesOnCapturedImage() async {
+    try {
+      // Perform face detection
+      final faces = await _faceDetector
+          .processImage(InputImage.fromFilePath(_capturedImagePath!));
+
+      // Display the result
+      setState(() {
+        detectedFaceCount = faces.length;
+
+        if (faces.isNotEmpty) {
+          // Call the function to load the full image and draw the rectangle
+          _loadFullImageAndShowFaceRectangle(faces.first.boundingBox!);
+        } else {
+          print('No faces detected');
+        }
+      });
+    } catch (e) {
+      print('Error detecting faces on captured image: $e');
+    }
+  }
+
+// Function to load the full image and draw the rectangle
+  void _loadFullImageAndShowFaceRectangle(Rect boundingBox) async {
+    try {
+      // Load the full image
+      final File capturedImageFile = File(_capturedImagePath!);
+      final Uint8List imageBytes = await capturedImageFile.readAsBytes();
+      final ui.Image fullImage = await decodeImageFromList(imageBytes);
+
+      // Get the original image dimensions
+      final double _originalImageWidth = fullImage.width.toDouble();
+      final double _originalImageHeight = fullImage.height.toDouble();
+
+      // Call the function to show the face rectangle
+      _showFaceRectangle(
+          boundingBox, _originalImageWidth, _originalImageHeight);
+    } catch (e) {
+      print('Error loading full image: $e');
+    }
+  }
+
+// Function to show the face rectangle
+  void _showFaceRectangle(
+      Rect boundingBox, double originalImageWidth, double originalImageHeight) {
+    // Adjustments to the bounding box dimensions
+    final double expandedHeight = boundingBox.height * 1.2; // Increase by 20%
+    final double adjustedTop =
+        boundingBox.top - boundingBox.height * 0.1; // Shift up by 10%
+
+    setState(() {
+      _customPaint = CustomPaint(
+        painter: FaceDetectorPainterNew(
+          Rect.fromLTRB(
+            boundingBox.left,
+            adjustedTop,
+            boundingBox.right,
+            adjustedTop + expandedHeight,
+          ),
+          originalImageWidth,
+          originalImageHeight,
+        ),
+      );
+    });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    Function to calculate adjusted cropping dimensions based on face rectangle adjustments
+  Rect _calculateAdjustedCropRect(Rect boundingBox) {
+    // Adjustments to the bounding box dimensions
+    final double expandedHeight = boundingBox.height * 1.2; // Increase by 20%
+    final double adjustedTop =
+        boundingBox.top - boundingBox.height * 0.1; // Shift up by 10%
+
+    // Calculate adjusted cropping dimensions
+    final double left = boundingBox.left;
+    final double top = adjustedTop;
+    final double right = boundingBox.right;
+    final double bottom = adjustedTop + expandedHeight;
+
+    return Rect.fromLTRB(left, top, right, bottom);
+  }
+
+  Future<void> _saveCapturedImage() async {
+    if (_capturedImagePath != null) {
+      try {
+        // Load the full image
+        final File capturedImageFile = File(_capturedImagePath!);
+        final Uint8List imageBytes = await capturedImageFile.readAsBytes();
+        final ui.Image fullImage = await decodeImageFromList(imageBytes);
+
+        // Get the detected faces
+        final List<Face> faces = await _faceDetector
+            .processImage(InputImage.fromFilePath(_capturedImagePath!));
+
+        // Ensure there is at least one detected face
+        if (faces.isNotEmpty) {
+          // Get the bounding box of the first detected face
+          final Rect boundingBox = faces.first.boundingBox!;
+
+          // Calculate adjusted cropping dimensions based on face rectangle adjustments
+          final Rect adjustedCropRect = _calculateAdjustedCropRect(boundingBox);
+
+          // Create a recorder to draw on the image
+          final recorder = ui.PictureRecorder();
+          final canvas = Canvas(recorder);
+
+          // Draw the cropped region of interest (ROI) from the original image
+          canvas.drawImageRect(
+            fullImage,
+            Rect.fromPoints(
+              Offset(adjustedCropRect.left, adjustedCropRect.top),
+              Offset(adjustedCropRect.right, adjustedCropRect.bottom),
+            ),
+            Rect.fromPoints(
+              Offset.zero,
+              Offset(adjustedCropRect.width, adjustedCropRect.height),
+            ),
+            Paint(),
+          );
+
+          // Finish recording
+          final recordedImage = await recorder.endRecording().toImage(
+                adjustedCropRect.width.toInt(),
+                adjustedCropRect.height.toInt(),
+              );
+
+          // Convert the recorded image to bytes
+          final ByteData? byteData =
+              await recordedImage.toByteData(format: ui.ImageByteFormat.png);
+          final List<int> croppedImageBytes = byteData!.buffer.asUint8List();
+
+          // Get the app's local directory
+          final appDir = await getApplicationDocumentsDirectory();
+
+          // Generate a unique filename for the saved image
+          final uniqueFileName = DateTime.now().toIso8601String() + ".png";
+
+          // Build the destination path
+          final destinationPath = appDir.path + "/" + uniqueFileName;
+
+          // Write the cropped image bytes to the destination path
+          await File(destinationPath).writeAsBytes(croppedImageBytes);
+
+          // Optionally, you can display a message or perform other actions after saving
+          // For example: ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Image saved!")));
+        } else {
+          print("No face detected in the captured image.");
+          // Handle the case where no face is detected
+        }
+      } catch (e) {
+        // Handle errors during the save operation
+        print("Error saving image: $e");
+      }
+    }
+  }
