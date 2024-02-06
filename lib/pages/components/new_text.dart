@@ -24,5 +24,11 @@ class AppText extends StatelessWidget {
     );
   }
 }
+<<<<<<< Updated upstream
 
 // thi is for third 
+=======
+// this is for new ui
+// thi is for third 
+// this i for main branch
+>>>>>>> Stashed changes
