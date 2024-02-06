@@ -8,9 +8,9 @@ class AppText extends StatelessWidget {
 
   const AppText(
       {super.key,
-      this.text,
+      required this.text,
       this.color = Colors.black,
-      required this.fontWeight},);
+      required this.fontWeight});
 
   @override
   Widget build(BuildContext context) {
