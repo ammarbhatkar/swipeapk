@@ -24,5 +24,5 @@ class AppText extends StatelessWidget {
     );
   }
 }
-
+// this is for new ui
 // thi is for third 
