@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:swype/constants/color_file.dart';
 import 'package:swype/models/login_api_model.dart';
 import 'package:swype/pages/configuration_view.dart';
@@ -29,6 +30,7 @@ class _LoginViewState extends State<LoginView> {
   late final TextEditingController _password;
   final ApiServices loginService = ApiServices();
   bool isLoading = false;
+  bool isGranted = false;
   String acessToken = "";
   @override
   void initState() {
@@ -227,8 +229,18 @@ class _LoginViewState extends State<LoginView> {
                       height: 0.06 * height,
                     ),
                     InkWell(
-                      onTap: () {
-                        login();
+                      onTap: () async {
+                        var location = await Permission.location.request();
+                        if (location.isGranted) {
+                          setState(() {
+                            isGranted = true;
+                          });
+
+                          login();
+                        } else {
+                          login();
+                        }
+
                         // Navigator.push(
                         //   context,
                         //   MaterialPageRoute(

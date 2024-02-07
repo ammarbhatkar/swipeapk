@@ -30,7 +30,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: Provider.of<ThemeProvider>(context).themeData,
-      home: NewHomeView(),
+      home: LoginView(),
     );
   }
 }

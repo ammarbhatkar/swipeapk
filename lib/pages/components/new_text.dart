@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AppText extends StatelessWidget {
+class AppUText extends StatelessWidget {
   final String text;
-  final Color color;
+  final Color? color;
   final FontWeight fontWeight;
-
-  const AppText(
-      {super.key,
-      required this.text,
-      this.color = Colors.black,
-      required this.fontWeight});
+  final double fontSize;
+  const AppUText({
+    Key? key,
+    required this.text,
+    this.color,
+    this.fontWeight = FontWeight.w600,
+    this.fontSize = 18,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
       style: GoogleFonts.openSans(
-        fontSize: 18,
-        color: color,
+        fontSize: fontSize,
+        color: color ?? Theme.of(context).colorScheme.scrim,
         fontWeight: fontWeight,
       ),
     );
@@ -26,4 +28,5 @@ class AppText extends StatelessWidget {
 }
 // this is for new ui
 // thi is for third 
-/// this is the code fo ammar
+/// this is the code fo ammar+
+/// okkkkkkk
