@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:swype/isar_collections/location_collection.dart';
+import 'package:swype/isar_services/isar_service.dart';
 import 'package:swype/models/check_in_model.dart';
 import 'package:swype/models/check_out_api_model.dart';
 import 'package:swype/models/location_api_model.dart';
@@ -9,7 +11,7 @@ import 'package:swype/models/login_api_model.dart';
 import 'package:http/http.dart' as http;
 
 class ApiServices {
-  // final String baseUrl;
+  final String baseUrl = "https://ckfoods.swypeuat.co.uk";
   // LoginService({required this.baseUrl});
 
   Future<LoginApiModel> loginApi(String email, String password) async {
@@ -17,9 +19,10 @@ class ApiServices {
     print("the email is $email");
     print("the password is $password");
     final response = await http.post(
-        Uri.parse(
-          'https://ckfoods.swypeuat.co.uk/api/login',
-        ),
+        // Uri.parse(
+        //   'https://ckfoods.swypeuat.co.uk/api/login',
+        // ),
+        Uri.parse('$baseUrl/api/login'),
         body: {'email': email, 'password': password});
     print("${response.statusCode}");
     if (response.statusCode == 200) {
@@ -35,11 +38,12 @@ class ApiServices {
 
   Future<LocationApiModel> locationApi(String acessToken) async {
     print("locationApi called");
-    final response = await http.post(
-        Uri.parse('https://ckfoods.swypeuat.co.uk/api/location'),
-        headers: {
-          'Authorization': 'Bearer $acessToken',
-        });
+    final response = await http
+        .post(Uri.parse('$baseUrl/api/location/fetch_mobile'), headers: {
+      'Authorization': 'Bearer $acessToken',
+      'Content-Type': 'application/json',
+    });
+
     print("the response code for location api is :${response.statusCode}");
     if (response.statusCode == 200) {
       return LocationApiModel.fromJson(jsonDecode(response.body));
@@ -52,7 +56,7 @@ class ApiServices {
       String acessToken, String locationId, String base64ImageString) async {
     print("Chekin Api Called");
     final response = await http.post(
-      Uri.parse("https://ckfoods.swypeuat.co.uk/api/front/staff_via_image"),
+      Uri.parse("$baseUrl/api/front/staff_via_image"),
       headers: {
         'Authorization': 'Bearer $acessToken',
       },

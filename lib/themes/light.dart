@@ -12,6 +12,6 @@ ThemeData lightMode = ThemeData(
     scrim: Colors.black54,
     inverseSurface: const Color.fromARGB(255, 15, 79, 132),
     onPrimary: Color.fromARGB(255, 40, 113, 173),
-    secondaryContainer: Colors.red[400],
+    secondaryContainer: Color.fromARGB(255, 190, 36, 25),
   ),
 );

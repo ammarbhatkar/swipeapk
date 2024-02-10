@@ -1,92 +1,130 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:swype/pages/components/new_text.dart';
 
 class MyDrawer extends StatelessWidget {
-  const MyDrawer({super.key});
+  final String email;
+  const MyDrawer({super.key, required this.email});
 
   // void logout() {
   //   //get auth service
   //   final _auth = AuthService();
   //   _auth.signout();
   // }
+  String getInitials(String email) {
+    List<String> names = email.split("@")[0].split(".");
+    String initials = "";
+    int numWords = 2;
+
+    if (names.length < 2) {
+      numWords = names.length;
+    }
+
+    for (var i = 0; i < numWords; i++) {
+      initials += '${names[i][0].toUpperCase()}';
+    }
+    return initials;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
-      backgroundColor: Colors.amber,
-      // backgroundColor: Theme.of(context).colorScheme.background,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            children: [
-              //logo
-              DrawerHeader(
-                child: Center(
-                  child: Icon(
-                    Icons.message,
-                    size: 60,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
+    return SafeArea(
+      child: Drawer(
+        backgroundColor: Color.fromARGB(255, 10, 50, 83),
+        elevation: 0,
 
-              //HOme list tile
-              Padding(
-                padding: EdgeInsets.only(
-                  left: 25,
+        // backgroundColor: Theme.of(context).colorScheme.background,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 15, right: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 80,
                 ),
-                child: ListTile(
-                  title: Text("H o m e"),
-                  leading: Icon(
-                    Icons.home,
+                Container(
+                  height: 80,
+                  width: 80,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
+                    ),
+                    shape: BoxShape.circle,
                   ),
-                  onTap: () {
-                    // POP THE DRAWER
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
-              //settings list tile
-              Padding(
-                padding: EdgeInsets.only(
-                  left: 25,
-                ),
-                child: ListTile(
-                  title: Text("S E T T I N G S"),
-                  leading: Icon(
-                    Icons.settings,
+                  child: Container(
+                    height: 80,
+                    width: 80,
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 33, 96, 147),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: AppUText(
+                        text: getInitials(email),
+                        color: Colors.white,
+                        fontSize: 30,
+                      ),
+                    ),
                   ),
-                  onTap: () {
-                    //pop the drawer
-                    Navigator.pop(context);
-                    //navigate to settings screen
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => SettingsScreen()));
-                  },
                 ),
-              ),
-            ],
+                SizedBox(
+                  height: 20,
+                ),
+                AppUText(
+                  text: email,
+                  color: Theme.of(context).colorScheme.tertiary,
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Divider(
+                  color: Color.fromARGB(255, 33, 96, 147),
+                  thickness: 1,
+                  endIndent: 10,
+                ),
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: AppUText(
+                    text: "My  Activities",
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  leading: Icon(
+                    Icons.task,
+                    color: Color.fromARGB(255, 33, 96, 147),
+                  ),
+                ),
+                Spacer(),
+                InkWell(
+                  onTap: () {
+                    print("log out tapped");
+                  },
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: AppUText(
+                      text: "Logout",
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                    leading: Icon(
+                      Icons.logout,
+                      color: Color.fromARGB(255, 33, 96, 147),
+                    ),
+                    // onTap: logout,
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                )
+              ],
+            ),
           ),
-          //logout list tile
+        ),
 
-          Padding(
-            padding: EdgeInsets.only(
-              left: 25,
-              bottom: 25,
-            ),
-            child: ListTile(
-              title: Text("L O G O U T"),
-              leading: Icon(
-                Icons.logout,
-              ),
-              // onTap: logout,
-            ),
-          )
-        ],
+        //logout list tile
       ),
     );
   }

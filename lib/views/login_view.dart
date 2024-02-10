@@ -7,6 +7,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swype/constants/color_file.dart';
 import 'package:swype/models/login_api_model.dart';
 import 'package:swype/pages/configuration_view.dart';
@@ -93,6 +94,9 @@ class _LoginViewState extends State<LoginView> {
         setState(() {
           acessToken = accessToken;
         });
+        await saveLoginInfo(email, accessToken);
+        await printLoginInfo();
+
         // Save the access token for future use
         // Navigate to the next screen
         // Navigator.push(
@@ -101,14 +105,16 @@ class _LoginViewState extends State<LoginView> {
         //     builder: (context) => ConfigurationView(
         //       acessToken: accessToken,
         //     ),
-        // ),
+        //   ),
         // );
+
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => NewHomeView(
-                // acessToken: accessToken,
-                ),
+              email: email,
+              // acessToken: accessToken,
+            ),
           ),
         );
       } else {
@@ -148,6 +154,21 @@ class _LoginViewState extends State<LoginView> {
         });
       }
     }
+  }
+
+  Future<void> saveLoginInfo(String email, String acessToken) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
+    await prefs.setString('acessToken', acessToken);
+  }
+
+  Future<void> printLoginInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String? accessToken = prefs.getString('acessToken');
+    String? email = prefs.getString('email');
+    print('Email from sppp: $email');
+    print('Access Tokenfrom sppp: $accessToken');
   }
 
   @override
