@@ -1,11 +1,18 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
-import 'package:swype/pages/components/new_text.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swype/drawerpages/my_activities.dart';
+import 'package:swype/components/new_text.dart';
+import 'package:swype/views/login_view.dart';
 
 class MyDrawer extends StatelessWidget {
   final String email;
-  const MyDrawer({super.key, required this.email});
+  MyDrawer({
+    super.key,
+    this.loginData,
+    required this.email,
+  });
 
   // void logout() {
   //   //get auth service
@@ -27,6 +34,7 @@ class MyDrawer extends StatelessWidget {
     return initials;
   }
 
+  SharedPreferences? loginData;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -85,22 +93,39 @@ class MyDrawer extends StatelessWidget {
                   thickness: 1,
                   endIndent: 10,
                 ),
-                ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  title: AppUText(
-                    text: "My  Activities",
-                    color: Theme.of(context).colorScheme.tertiary,
-                  ),
-                  leading: Icon(
-                    Icons.task,
-                    color: Color.fromARGB(255, 33, 96, 147),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MyActivities()));
+                  },
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: AppUText(
+                      text: "My  Activities",
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                    leading: Icon(
+                      Icons.task,
+                      color: Color.fromARGB(255, 33, 96, 147),
+                    ),
                   ),
                 ),
                 Spacer(),
                 InkWell(
                   onTap: () {
                     print("log out tapped");
+                    // loginData?.setBool('login', true);
+                    loginData?.remove('email');
+                    loginData?.remove('acessToken');
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LoginView(),
+                      ),
+                    );
                   },
                   child: ListTile(
                     dense: true,

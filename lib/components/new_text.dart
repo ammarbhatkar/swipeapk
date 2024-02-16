@@ -6,13 +6,15 @@ class AppUText extends StatelessWidget {
   final Color? color;
   final FontWeight fontWeight;
   final double fontSize;
-  const AppUText({
-    Key? key,
-    required this.text,
-    this.color,
-    this.fontWeight = FontWeight.w600,
-    this.fontSize = 18,
-  }) : super(key: key);
+  double? lineHeight;
+  AppUText(
+      {Key? key,
+      required this.text,
+      this.color,
+      this.fontWeight = FontWeight.w600,
+      this.fontSize = 18,
+      this.lineHeight})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,7 @@ class AppUText extends StatelessWidget {
         fontSize: fontSize,
         color: color ?? Theme.of(context).colorScheme.scrim,
         fontWeight: fontWeight,
+        height: lineHeight,
       ),
     );
   }

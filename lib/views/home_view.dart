@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swype/constants/color_file.dart';
 import 'package:swype/pages/configuration_bottom_sheet.dart';
 import 'package:swype/util/permision_denied_dialog.dart';
@@ -14,11 +15,19 @@ import 'package:swype/widgets/app_large_text.dart';
 import 'package:swype/widgets/app_text.dart';
 
 class HomeView extends StatefulWidget {
-  String? locationId = "";
+  int? locationId;
   String? acessToken = "";
+  double? lat;
+  double? long;
+  int? type;
+  String? locationName;
   HomeView({
     this.locationId,
+    this.lat,
+    this.long,
+    this.type,
     this.acessToken,
+    this.locationName,
     super.key,
   });
 
@@ -32,10 +41,22 @@ class _HomeViewState extends State<HomeView> {
   bool cameraPermissionRequested = false;
   bool locationPermissionRequested = false;
 
+  // void initState()  {
+  //   // await getLoginInfo();
+  //   print("the location id is ${widget.locationId}");
+  //   print("the acess token is ${widget.acessToken}");
+
+  //   super.initState();
+  // }
+  @override
   void initState() {
+    super.initState();
+    print("chlo");
     print("the location id is ${widget.locationId}");
     print("the acess token is ${widget.acessToken}");
-    super.initState();
+    print("the lat is ${widget.lat}");
+    print("the long is ${widget.long}");
+    print("the type is ${widget.type}");
   }
 
   @override
@@ -155,10 +176,14 @@ class _HomeViewState extends State<HomeView> {
                               serviceEnabled: serviceEnabled,
                               locationId: widget.locationId,
                               acessToken: widget.acessToken,
+                              locationName: widget.locationName,
+                              lat: widget.lat,
+                              long: widget.long,
+                              type: widget.type,
                             );
                           }));
                         });
-                      } else if (location.isDenied) {
+                        //     } else if (location.isDenied) {
                         print("Denied");
                       } else if (location.isPermanentlyDenied) {
                         DialogUtils.showPermissionDeniedDialog(

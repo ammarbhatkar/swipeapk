@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, empty_catches
+// ignore_for_file: prefer_const_constructors, empty_catches, avoid_print, use_build_context_synchronously
 
 import 'dart:convert';
 import 'dart:io';
@@ -8,15 +8,21 @@ import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swype/constants/color_file.dart';
+import 'package:swype/isar_services/isar_service.dart';
+import 'package:swype/models/add_activity.dart';
 import 'package:swype/models/check_in_model.dart';
 import 'package:swype/services/login_api_service.dart';
 import 'package:swype/views/face_detecttor.dart';
 import 'package:swype/views/home_view.dart';
+import 'package:swype/views/new_home.dart';
 import 'package:swype/views/painters/new_painter.dart';
 
 import 'package:geolocator/geolocator.dart';
@@ -35,6 +41,10 @@ class CameraView extends StatefulWidget {
     this.serviceEnabled,
     this.locationId,
     this.acessToken,
+    this.lat,
+    this.long,
+    this.type,
+    this.locationName,
   }) : super(key: key);
 
   final CustomPaint? customPaint;
@@ -44,14 +54,18 @@ class CameraView extends StatefulWidget {
   final Function(CameraLensDirection direction)? onCameraLensDirectionChanged;
   final CameraLensDirection initialCameraLensDirection;
   bool? serviceEnabled;
-  final String? locationId;
+  int? locationId;
   final String? acessToken;
-
+  double? lat;
+  double? long;
+  String? locationName;
+  int? type = 2;
   @override
   State<CameraView> createState() => _CameraViewState();
 }
 
 class _CameraViewState extends State<CameraView> {
+  String typeCh = "2";
   late String lat;
   late String long;
   Rect? _lastDetectedFaceBoundingBox;
@@ -78,15 +92,32 @@ class _CameraViewState extends State<CameraView> {
   bool _isBusy = false;
   CustomPaint? _customPaint;
   String? _text;
+  int? checoutType = 0;
   var _cameraLensDirection = CameraLensDirection.front;
+  bool isLoading = false;
+  String getCurrentUserEmail = '';
 
   @override
   void initState() {
     super.initState();
+
     print("the acess token is from cv:  ${widget.acessToken}");
     print("the location id is from cv:  ${widget.locationId}");
+    print("the lat is from cv:  ${widget.lat}");
+    print("the long is from cv:  ${widget.long}");
+    print("the type is from cv:  ${widget.type}");
     print("now you are in initsate of camera view");
+    print("the current user email is $getCurrentUserEmail");
+    getCurrentUser();
     _initialize();
+  }
+
+  getCurrentUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      getCurrentUserEmail = prefs.getString('email')!;
+    });
+    print("the current user email from function is $getCurrentUserEmail");
   }
 
   void _initialize() async {
@@ -323,33 +354,97 @@ class _CameraViewState extends State<CameraView> {
                   bottomLeft: Radius.circular(10),
                   bottomRight: Radius.circular(10),
                 ),
-                color: primaryBlueColor,
+                color: widget.type == 1
+                    ? Theme.of(context).colorScheme.inverseSurface
+                    : Theme.of(context).colorScheme.secondaryContainer,
               ),
               child: InkWell(
                 onTap: () async {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return SpinKitSpinningLines(color: primaryBlueColor);
+                    },
+                  );
+                  setState(() {
+                    isLoading = true;
+                  });
                   print(
                       "the acess token is from checkin is:  ${widget.acessToken}");
                   print(
                       "the location id is from checkin is:  ${widget.locationId}");
                   final base64ImageString = await _saveCapturedImage();
-                  print(
-                      "the base64 image is from checkin button $base64ImageString ");
-                  print("now we are going to call api");
+                  // print(
+                  // // "the base64 image is from checkin button $base64ImageString ");
+                  // print("the lat is from checkin button ${widget.lat} ");
+                  // print("the long is from checkin button ${widget.long} ");
+                  // print("the type is from checkin button ${widget.type} ");
+                  // print("typeCh is${widget.type}");
+                  // print("now we are going to call api");
                   try {
-                    CheckInApiModel response = await loginService.checkinApi(
-                      widget.acessToken.toString(),
-                      widget.locationId.toString(),
-                      base64ImageString.toString(),
-                    );
-                    print("the response is ${response.success}");
-                    print("the response is ${response.message}");
+                    if (widget.lat != null && widget.long != null) {
+                      CheckInApiModel response = await loginService.checkinApi(
+                        widget.acessToken!,
+                        widget.locationId!,
+                        widget.locationName!,
+                        widget.lat!,
+                        widget.long!,
+                        widget.type!,
+                        getCurrentUserEmail,
+                        // 2,
+                        base64ImageString!,
+                      );
+
+                      print(
+                          "the response is  form camera view${response.success}");
+                      // ...
+                      // rest of your code ...
+                    } else {
+                      print("Latitude and/or longitude is null");
+                    }
+                    // if (response.success!) {
+                    //   // Call addActivityApi function here
+                    //   AddActivityModel activityResponse =
+                    //       await loginService.addActivityApi(
+                    //     widget.acessToken!,
+                    //     1805, // replace with actual userId
+                    //     "2023-10-30", // replace with actual date
+                    //     "2024-02-10", // replace with actual time
+                    //     3, // replace with actual location
+                    //     1, // replace with actual type
+                    //   );
+
+                    //   print(
+                    //       "the response for add activity api is ${activityResponse.success}");
+                    // }
                   } catch (e) {}
+                  setState(() {
+                    isLoading = false;
+                  });
+                  Navigator.of(context).pop(); // Dismiss the dialog
+                  Get.offAll(() => NewHomeView(
+                        isActivityAdded: true,
+                        isCheckingIn: widget.type == 1 ? true : false,
+                        isCheckingOut: widget.type == 2 ? true : false,
+                      ));
+                  // Navigator.pushReplacement(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => NewHomeView(
+                  //       isActivityAdded: true,
+                  //       isCheckingIn: widget.type == 1 ? true : false,
+                  //       isCheckingOut: widget.type == 2 ? true : false,
+                  //     ),
+                  //   ),
+                  // );
+
                   // Navigator.push(context,
                   //     MaterialPageRoute(builder: (context) => HomeView()));
                 },
                 child: Center(
                   child: AppText(
-                    text: "CHECK-IN",
+                    text: widget.type == 1 ? "CHECK-IN" : "Check-Out",
                     color: buttonTextWhiteColor,
                     fontWeight: FontWeight.w600,
                   ),
@@ -564,6 +659,7 @@ class _CameraViewState extends State<CameraView> {
             child: Icon(
               Icons.camera,
               size: 25,
+              color: Colors.white,
             ),
           ),
         ),
@@ -823,8 +919,8 @@ class _CameraViewState extends State<CameraView> {
         });
         _getCurrentLocation().then(
           (value) {
-            lat = '${value.latitude}';
-            long = '${value.longitude}';
+            // lat = '${value.latitude}';
+            // long = '${value.longitude}';
             setState(() {
               print("Lattitude value : $lat");
 

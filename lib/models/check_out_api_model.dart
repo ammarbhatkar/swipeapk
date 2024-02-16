@@ -1,11 +1,11 @@
-class CheckoutApiModel {
+class CheckOutApiModel {
   bool? success;
   String? time;
   int? activityId;
 
-  CheckoutApiModel({this.success, this.time, this.activityId});
+  CheckOutApiModel({this.success, this.time, this.activityId});
 
-  CheckoutApiModel.fromJson(Map<String, dynamic> json) {
+  CheckOutApiModel.fromJson(Map<String, dynamic> json) {
     success = json['success'];
     time = json['time'];
     activityId = json['activityId'];

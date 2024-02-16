@@ -1,23 +1,21 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:swype/pages/components/new_text.dart';
+import 'package:swype/components/new_text.dart';
 
-class SecondaryContainer extends StatelessWidget {
+class AttendanceContinaer extends StatelessWidget {
   final String headerIconPath;
   final String headerText;
-  final String imagePath;
-  final String rowText1;
-  final String rowText2;
-  final String heading1;
-  SecondaryContainer({
+  final String presentDays;
+  final String leaves;
+  final String totalDays;
+  AttendanceContinaer({
     super.key,
     required this.headerIconPath,
     required this.headerText,
-    required this.rowText1,
-    required this.rowText2,
-    required this.imagePath,
-    required this.heading1,
+    required this.presentDays,
+    required this.leaves,
+    required this.totalDays,
   });
 
   @override
@@ -70,31 +68,44 @@ class SecondaryContainer extends StatelessWidget {
                 SizedBox(
                   width: 2,
                 ),
-                Image.asset(
-                  imagePath,
-                  height: 40,
-                ),
-                SizedBox(
-                  width: 10,
-                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppUText(
-                      text: heading1,
+                      text: presentDays,
+                      color: Colors.black,
+                    ),
+                    AppUText(
+                      text: "Present",
                       fontSize: 14,
                     ),
-                    Row(
-                      children: [
-                        AppUText(
-                          text: rowText1,
-                          fontSize: 14,
-                        ),
-                        AppUText(
-                          text: rowText2,
-                          fontSize: 14,
-                        ),
-                      ],
+                  ],
+                ),
+                Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppUText(
+                      text: leaves,
+                      color: Colors.black,
+                    ),
+                    AppUText(
+                      text: "Leaves",
+                      fontSize: 14,
+                    ),
+                  ],
+                ),
+                Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppUText(
+                      text: totalDays,
+                      color: Colors.black,
+                    ),
+                    AppUText(
+                      text: "Total Days",
+                      fontSize: 14,
                     ),
                   ],
                 ),

@@ -33,10 +33,17 @@ class _LoginViewState extends State<LoginView> {
   bool isLoading = false;
   bool isGranted = false;
   String acessToken = "";
+
+  //create insatmce of sharedprefrence
+  // SharedPreferences? loginData;
+
+  // //create bool to check if the user is new
+  // bool? newUser;
   @override
   void initState() {
     _email = TextEditingController();
     _password = TextEditingController();
+
     log("new swipe apk");
     super.initState();
   }
@@ -94,8 +101,28 @@ class _LoginViewState extends State<LoginView> {
         setState(() {
           acessToken = accessToken;
         });
-        await saveLoginInfo(email, accessToken);
-        await printLoginInfo();
+
+        if (email != "" && password != "") {
+          print("Email and password are not null");
+          print("The acess token is $acessToken");
+          final SharedPreferences sharedPreferences =
+              await SharedPreferences.getInstance();
+          sharedPreferences.setString('email', email);
+          sharedPreferences.setString('acessToken', accessToken);
+
+          // loginData?.setBool('login', false);
+          // loginData?.setString('acessToken', accessToken);
+          // loginData?.setString('email', email);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NewHomeView(),
+            ),
+          );
+        }
+        // await saveLoginInfo(email, accessToken);
+        // await printLoginInfo();
 
         // Save the access token for future use
         // Navigate to the next screen
@@ -108,15 +135,15 @@ class _LoginViewState extends State<LoginView> {
         //   ),
         // );
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NewHomeView(
-              email: email,
-              // acessToken: accessToken,
-            ),
-          ),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => NewHomeView(
+        //       email: email,
+        //       // acessToken: accessToken,
+        //     ),
+        //   ),
+        // );
       } else {
         print("Invalid credentials");
         print(response);
@@ -156,20 +183,20 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  Future<void> saveLoginInfo(String email, String acessToken) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', email);
-    await prefs.setString('acessToken', acessToken);
-  }
+  // Future<void> saveLoginInfo(String email, String acessToken) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   await prefs.setString('email', email);
+  //   await prefs.setString('acessToken', acessToken);
+  // }
 
-  Future<void> printLoginInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+  // Future<void> printLoginInfo() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    String? accessToken = prefs.getString('acessToken');
-    String? email = prefs.getString('email');
-    print('Email from sppp: $email');
-    print('Access Tokenfrom sppp: $accessToken');
-  }
+  //   String? accessToken = prefs.getString('acessToken');
+  //   String? email = prefs.getString('email');
+  //   print('Email from sppp: $email');
+  //   print('Access Tokenfrom sppp: $accessToken');
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -251,16 +278,7 @@ class _LoginViewState extends State<LoginView> {
                     ),
                     InkWell(
                       onTap: () async {
-                        var location = await Permission.location.request();
-                        if (location.isGranted) {
-                          setState(() {
-                            isGranted = true;
-                          });
-
-                          login();
-                        } else {
-                          login();
-                        }
+                        login();
 
                         // Navigator.push(
                         //   context,

@@ -12,10 +12,18 @@ class FaceDetectorView extends StatefulWidget {
     this.serviceEnabled,
     this.locationId,
     this.acessToken,
+    this.lat,
+    this.long,
+    this.type,
+    this.locationName,
   }) : super(key: key);
   bool? serviceEnabled;
-  String? locationId;
+  int? locationId;
   String? acessToken;
+  double? lat;
+  double? long;
+  int? type;
+  String? locationName;
   @override
   State<FaceDetectorView> createState() => _FaceDetectorViewState();
 }
@@ -43,8 +51,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   @override
   Widget build(BuildContext context) {
     return DetectorView(
+      locationName: widget.locationName,
       acessToken: widget.acessToken,
       locationId: widget.locationId,
+      lat: widget.lat,
+      long: widget.long,
+      type: widget.type,
       title: 'Face Detector',
       customPaint: _customPaint,
       //   text: _text,

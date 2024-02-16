@@ -19,6 +19,10 @@ class DetectorView extends StatefulWidget {
     this.serviceEnabled,
     this.locationId,
     this.acessToken,
+    this.lat,
+    this.long,
+    this.locationName,
+    this.type,
   }) : super(key: key);
 
   final String title;
@@ -29,8 +33,12 @@ class DetectorView extends StatefulWidget {
   final Function(CameraLensDirection direction)? onCameraLensDirectionChanged;
   final CameraLensDirection initialCameraLensDirection;
   bool? serviceEnabled;
-  String? locationId;
+  int? locationId;
   String? acessToken;
+  double? lat;
+  double? long;
+  int? type;
+  String? locationName;
   @override
   State<DetectorView> createState() => _DetectorViewState();
 }
@@ -41,6 +49,9 @@ class _DetectorViewState extends State<DetectorView> {
     return CameraView(
       acessToken: widget.acessToken,
       locationId: widget.locationId,
+      lat: widget.lat,
+      long: widget.long,
+      type: widget.type,
       customPaint: widget.customPaint,
       onImage: widget.onImage,
       onCameraFeedReady: widget.onCameraFeedReady,
@@ -48,6 +59,7 @@ class _DetectorViewState extends State<DetectorView> {
       initialCameraLensDirection: widget.initialCameraLensDirection,
       onCameraLensDirectionChanged: widget.onCameraLensDirectionChanged,
       serviceEnabled: widget.serviceEnabled,
+      locationName: widget.locationName,
     );
   }
 

@@ -1,13 +1,16 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:swype/isar_collections/location_collection.dart';
+import 'package:swype/services/auth_gate.dart';
 import 'package:swype/themes/theme_provider.dart';
 import 'package:swype/views/login_view.dart';
 
 import 'package:swype/views/new_home.dart';
+import 'package:swype/views/splash_scree.dart';
 
 List<CameraDescription> cameras = [];
 Future<void> main() async {
@@ -38,9 +41,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       theme: Provider.of<ThemeProvider>(context).themeData,
-      home: LoginView(),
+      home: SplashScreen(),
     );
   }
 }

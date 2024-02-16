@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:swype/pages/components/new_text.dart';
+import 'package:swype/components/new_text.dart';
 
 class CheckOutContainer extends StatelessWidget {
   final String time;
