@@ -18,6 +18,7 @@ import 'package:swype/components/check_in_container.dart';
 import 'package:swype/components/check_in_failed.dart';
 import 'package:swype/components/new_text.dart';
 import 'package:swype/components/sucess_dialog.dart';
+import 'package:swype/models/show_activity_model.dart';
 import 'package:swype/services/location_service.dart';
 import 'package:swype/services/login_api_service.dart';
 import 'package:swype/util/permision_denied_dialog.dart';
@@ -126,11 +127,13 @@ class _NewHomeViewState extends State<NewHomeView> {
     // Start the timer
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       // Update the elapsed time every second
-      setState(() {
-        elapsedTime += Duration(seconds: 1);
-        opacityLevel =
-            opacityLevel == 0 ? 1.0 : 0.0; // Toggle the opacity level
-      });
+      if (mounted) {
+        setState(() {
+          elapsedTime += Duration(seconds: 1);
+          opacityLevel =
+              opacityLevel == 0 ? 1.0 : 0.0; // Toggle the opacity level
+        });
+      }
     });
   }
 
@@ -139,14 +142,16 @@ class _NewHomeViewState extends State<NewHomeView> {
     timer?.cancel();
 
     // Reset the elapsed time
-    setState(() {
-      print("the first check in time from checkout is :${firstCheckInTime}");
-      if (firstCheckInTime != null) {
-        elapsedTime = DateTime.now().difference(firstCheckInTime!);
-      }
-      // elapsedTime = Duration();
-      opacityLevel = 1.0; // Reset the opacity level
-    });
+    if (mounted) {
+      setState(() {
+        print("the first check in time from checkout is :${firstCheckInTime}");
+        if (firstCheckInTime != null) {
+          elapsedTime = DateTime.now().difference(firstCheckInTime!);
+        }
+        // elapsedTime = Duration();
+        opacityLevel = 1.0; // Reset the opacity level
+      });
+    }
   }
 
   String getGreeting() {
@@ -162,17 +167,19 @@ class _NewHomeViewState extends State<NewHomeView> {
 
   Future<void> getLoginInfo() async {
     loginData = await SharedPreferences.getInstance();
-    setState(() {
-      //assign acesstoken to getacestoken & email to get email
-      getAccessToken = loginData?.getString('acessToken');
-      getEmail = loginData?.getString('email');
-    });
+    if (mounted) {
+      setState(() {
+        //assign acesstoken to getacestoken & email to get email
+        getAccessToken = loginData?.getString('acessToken');
+        getEmail = loginData?.getString('email');
+      });
+    }
     var storedLocations = await isarService.getLocations();
     if (storedLocations.isEmpty) {
       // If not, fetch and store the locations
       await fetchLocations(getAccessToken!);
     }
-
+    // await fetchActivities(getAccessToken!);
     // var locations = await fetchLocations(accessToken!);
     // locations
     // if (locationApiModel != null) {
@@ -431,7 +438,12 @@ class _NewHomeViewState extends State<NewHomeView> {
                             }));
                           } else {
                             print("the position data is :${positonData}");
-                            OutOfRadiusDialog();
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return OutOfRadiusDialog();
+                              },
+                            );
                           }
                         } catch (e) {
                           print("the error is :${e}");
@@ -495,6 +507,32 @@ class _NewHomeViewState extends State<NewHomeView> {
     print("teh respomse is ${response}");
   }
 
+  // Future<void> fetchActivities(String acessToken) async {
+  //   print("fetch activities from home callled");
+  //   DateTime now = DateTime.now();
+  //   DateTime monthDate = DateTime(now.year, now.month - 1, now.day);
+  //   String endDate = DateFormat('yyyy-MM-dd').format(now);
+  //   String startDate = DateFormat('yyyy-MM-dd').format(monthDate);
+
+  //   ShowActivityModel response =
+  //       await apiService.fetchActivities(acessToken, startDate, endDate);
+  //   if (response.activities != null) {
+  //     print("the response of fetch activity is :${response.activities}");
+  //     print(response.activities?.length);
+  //     print(response.activities?[0].locationId);
+  //     for (var obj in response.activities!) {
+  //       isarService.addActivityToIsar(
+  //         // userId,
+  //         getEmail ?? "",
+  //         // locationName,
+  //         obj.locationName ?? "",
+  //         obj.locationId.toString(),
+  //         obj.type!,
+  //         obj.timestamp!,
+  //       );
+  //     }
+  //   }
+  // }
   // _getActivities() {
   //   isarService.getActivities().listen((value) {
   //     setState(() {
@@ -516,29 +554,31 @@ class _NewHomeViewState extends State<NewHomeView> {
   // }
   _getActivities() {
     isarService.getActivities().listen((value) {
-      setState(() {
-        // Filter the activities by the specific date
-        checkEvents = value.where((activity) {
-          return activity.time.startsWith(currentDay) &&
-              activity.userId == getEmail;
-        }).toList();
+      if (mounted) {
+        setState(() {
+          // Filter the activities by the specific date
+          checkEvents = value.where((activity) {
+            return activity.time.startsWith(currentDay) &&
+                activity.userId == getEmail;
+          }).toList();
 
-        if (checkEvents.isNotEmpty) {
-          var lastActivityInfo = checkEvents.last;
-          lastActivity = lastActivityInfo.type;
-          print("the last activity is from act :${lastActivityInfo.type}");
-          var firstCheckIn = checkEvents.first;
-          firstCheckInTime = DateTime.parse(firstCheckIn.time);
-          print("the first check in time is nnnnnn :${firstCheckInTime}");
+          if (checkEvents.isNotEmpty) {
+            var lastActivityInfo = checkEvents.last;
+            lastActivity = lastActivityInfo.type;
+            print("the last activity is from act :${lastActivityInfo.type}");
+            var firstCheckIn = checkEvents.first;
+            firstCheckInTime = DateTime.parse(firstCheckIn.time);
+            print("the first check in time is nnnnnn :${firstCheckInTime}");
 
-          // Start or reset the timer here
-          if (widget.isCheckingIn == true || lastActivity == 1) {
-            startTimer();
-          } else if (widget.isCheckingOut == true || lastActivity == 2) {
-            resetTimer();
+            // Start or reset the timer here
+            if (widget.isCheckingIn == true || lastActivity == 1) {
+              startTimer();
+            } else if (widget.isCheckingOut == true || lastActivity == 2) {
+              resetTimer();
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 }

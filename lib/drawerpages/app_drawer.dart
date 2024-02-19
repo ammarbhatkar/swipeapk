@@ -1,9 +1,12 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swype/drawerpages/my_activities.dart';
 import 'package:swype/components/new_text.dart';
+import 'package:swype/isar_collections/activity_collection.dart';
+import 'package:swype/isar_services/isar_service.dart';
 import 'package:swype/views/login_view.dart';
 
 class MyDrawer extends StatelessWidget {
@@ -115,8 +118,15 @@ class MyDrawer extends StatelessWidget {
                 ),
                 Spacer(),
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
+                    IsarService isarService = IsarService();
                     print("log out tapped");
+                    final isar = await isarService.db;
+
+                    await isar.writeTxn(() async {
+                      await isar.clear();
+                    });
+
                     // loginData?.setBool('login', true);
                     loginData?.remove('email');
                     loginData?.remove('acessToken');

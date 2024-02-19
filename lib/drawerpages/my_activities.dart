@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors, avoid_unnecessary_containers
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:swype/isar_collections/activity_collection.dart';
@@ -23,14 +25,17 @@ class _MyActivitiesState extends State<MyActivities> {
   List<ActivityCollecion> checkEvents = [];
   int lastActivity = 0;
   int checkInType = 1;
+  StreamSubscription? _activitySubscription;
 
   _getActivities() {
-    isarService.getActivities().listen((value) {
-      setState(() {
-        checkEvents = value;
-        var lastActivityInfo = value.last;
-        lastActivity = lastActivityInfo.type;
-      });
+    _activitySubscription = isarService.getActivities().listen((value) {
+      if (mounted) {
+        setState(() {
+          checkEvents = value;
+          var lastActivityInfo = value.last;
+          lastActivity = lastActivityInfo.type;
+        });
+      }
     });
   }
 
@@ -38,6 +43,12 @@ class _MyActivitiesState extends State<MyActivities> {
   void initState() {
     super.initState();
     _getActivities();
+  }
+
+  @override
+  void dispose() {
+    _activitySubscription?.cancel();
+    super.dispose();
   }
 
   @override

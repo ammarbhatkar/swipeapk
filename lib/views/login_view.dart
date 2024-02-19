@@ -6,10 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:isar/isar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swype/constants/color_file.dart';
+import 'package:swype/isar_services/isar_service.dart';
 import 'package:swype/models/login_api_model.dart';
+import 'package:swype/models/show_activity_model.dart';
 import 'package:swype/pages/configuration_view.dart';
 import 'package:swype/services/login_api_service.dart';
 import 'package:swype/views/home_view.dart';
@@ -90,6 +94,10 @@ class _LoginViewState extends State<LoginView> {
       print("the reponse of api is $response");
       if (response.success == 'true') {
         String accessToken = response.accessToken ?? "";
+        await fetchActivities(
+          accessToken,
+          email,
+        );
         setState(() {
           if (isLoading) {
             Navigator.pop(context);
@@ -197,6 +205,34 @@ class _LoginViewState extends State<LoginView> {
   //   print('Email from sppp: $email');
   //   print('Access Tokenfrom sppp: $accessToken');
   // }
+  Future<void> fetchActivities(String acessToken, String email) async {
+    ApiServices apiService = ApiServices();
+    IsarService isarService = IsarService();
+    print("fetch activities from home callled");
+    DateTime now = DateTime.now();
+    DateTime monthDate = DateTime(now.year, now.month - 1, now.day);
+    String endDate = DateFormat('yyyy-MM-dd').format(now);
+    String startDate = DateFormat('yyyy-MM-dd').format(monthDate);
+
+    ShowActivityModel response =
+        await apiService.fetchActivities(acessToken, startDate, endDate);
+    if (response.activities != null) {
+      print("the response of fetch activity is :${response.activities}");
+      print(response.activities?.length);
+      print(response.activities?[0].locationId);
+      for (var obj in response.activities!) {
+        await isarService.addActivityToIsar(
+          // userId,
+          email,
+          // locationName,
+          obj.locationName ?? "",
+          obj.locationId.toString(),
+          obj.type!,
+          obj.timestamp!,
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

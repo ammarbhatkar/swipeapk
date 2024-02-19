@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_this, unnecessary_new, prefer_collection_literals
+
 class ShowActivityModel {
   List<Activities>? activities;
 
@@ -26,18 +28,18 @@ class Activities {
   int? userId;
   String? timestamp;
   int? type;
-  Null? exitReason;
+  int? exitReason;
   int? option;
-  Null? variation;
+  String? variation;
   int? locationId;
   String? unrecognizedTemplateName;
-  Null? fileName;
-  Null? leaveTime;
+  String? fileName;
+  String? leaveTime;
   String? image;
-  Null? reason;
+  String? reason;
   int? isArchive;
-  Null? lat;
-  Null? long;
+  double? lat;
+  double? long;
   String? locationName;
 
   Activities(

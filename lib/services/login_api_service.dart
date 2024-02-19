@@ -11,6 +11,7 @@ import 'package:swype/models/location_api_model.dart';
 import 'package:swype/models/login_api_model.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:swype/models/show_activity_model.dart';
 
 class ApiServices {
   final String baseUrl = "https://ckfoods.swypeuat.co.uk";
@@ -53,6 +54,33 @@ class ApiServices {
     } else {
       throw Exception('Failed to load data');
     }
+  }
+
+  Future<ShowActivityModel> fetchActivities(
+      String acessToken, String startDate, String endDate) async {
+    print("fetchActivities called");
+    try {
+      final response = await http.post(
+          Uri.parse('https://ckfoods.swypeuat.co.uk/api/activity/show_mobile'),
+          headers: {
+            'Authorization': 'Bearer $acessToken',
+          },
+          body: {
+            "startDate": startDate,
+            "endDate": endDate,
+          });
+      print(
+          "the response status code for fetch activity api is :${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("the response from sevice  is ${response.body}");
+        return ShowActivityModel.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print("An error occurred: $e");
+    }
+    throw Exception('Failed to load data');
   }
 
   Future<CheckInApiModel> checkinApi(
