@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
+
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
@@ -19,7 +19,7 @@ import 'package:swype/constants/color_file.dart';
 import 'package:swype/isar_services/isar_service.dart';
 import 'package:swype/models/add_activity.dart';
 import 'package:swype/models/check_in_model.dart';
-import 'package:swype/services/login_api_service.dart';
+import 'package:swype/services/api_services.dart';
 import 'package:swype/views/face_detecttor.dart';
 import 'package:swype/views/home_view.dart';
 import 'package:swype/views/new_home.dart';
@@ -114,24 +114,28 @@ class _CameraViewState extends State<CameraView> {
 
   getCurrentUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      getCurrentUserEmail = prefs.getString('email')!;
-    });
-    print("the current user email from function is $getCurrentUserEmail");
+    if (mounted) {
+      setState(() {
+        getCurrentUserEmail = prefs.getString('email')!;
+      });
+      print("the current user email from function is $getCurrentUserEmail");
+    }
   }
 
   void _initialize() async {
-    if (_cameras.isEmpty) {
-      _cameras = await availableCameras();
-    }
-    for (var i = 0; i < _cameras.length; i++) {
-      if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
-        _cameraIndex = i;
-        break;
+    if (mounted) {
+      if (_cameras.isEmpty) {
+        _cameras = await availableCameras();
       }
-    }
-    if (_cameraIndex != -1) {
-      _startLiveFeed();
+      for (var i = 0; i < _cameras.length; i++) {
+        if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
+          _cameraIndex = i;
+          break;
+        }
+      }
+      if (_cameraIndex != -1) {
+        _startLiveFeed();
+      }
     }
   }
 
@@ -333,14 +337,16 @@ class _CameraViewState extends State<CameraView> {
           ),
           _customPaint ?? Container(),
           // _saveButton(),
-          Positioned(
-            bottom: 70,
-            left: MediaQuery.of(context).size.width / 3,
-            child: Text(
-              getText(),
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
+          // Positioned(
+          //   bottom: 70,
+          //   // left: MediaQuery.of(context).size.width / 3,
+          //   left: 0,
+          //   right: 0,
+          //   child: Text(
+          //     getText(),
+          //     style: TextStyle(color: Colors.white),
+          //   ),
+          // ),
           Positioned(
             bottom: 0,
 
@@ -367,9 +373,11 @@ class _CameraViewState extends State<CameraView> {
                       return SpinKitSpinningLines(color: primaryBlueColor);
                     },
                   );
-                  setState(() {
-                    isLoading = true;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      isLoading = true;
+                    });
+                  }
                   print(
                       "the acess token is from checkin is:  ${widget.acessToken}");
                   print(
@@ -423,11 +431,22 @@ class _CameraViewState extends State<CameraView> {
                     isLoading = false;
                   });
                   Navigator.of(context).pop(); // Dismiss the dialog
-                  Get.offAll(() => NewHomeView(
+                  // Get.offAll(() => NewHomeView(
+                  //       isActivityAdded: true,
+                  //       isCheckingIn: widget.type == 1 ? true : false,
+                  //       isCheckingOut: widget.type == 2 ? true : false,
+                  //     ));
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => NewHomeView(
                         isActivityAdded: true,
                         isCheckingIn: widget.type == 1 ? true : false,
                         isCheckingOut: widget.type == 2 ? true : false,
-                      ));
+                      ),
+                    ),
+                    (Route<dynamic> route) => false,
+                  );
                   // Navigator.pushReplacement(
                   //   context,
                   //   MaterialPageRoute(
@@ -479,10 +498,10 @@ class _CameraViewState extends State<CameraView> {
                   ),
           ),
           // _backButton(),
-          _switchLiveCameraToggle(),
-          _detectionViewModeToggle(),
-          _zoomControl(),
-          _exposureControl(),
+          // _switchLiveCameraToggle(),
+          // _detectionViewModeToggle(),
+          // _zoomControl(),
+          // _exposureControl(),
           _captureButton(),
         ],
       ),
@@ -546,11 +565,10 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _zoomControl() => Positioned(
-        bottom: 16,
-        left: 0,
-        right: 0,
-        child: Align(
-          alignment: Alignment.bottomCenter,
+        top: 80,
+        left: 8,
+        child: RotatedBox(
+          quarterTurns: 3,
           child: SizedBox(
             width: 250,
             child: Row(
@@ -595,7 +613,7 @@ class _CameraViewState extends State<CameraView> {
       );
 
   Widget _exposureControl() => Positioned(
-        top: 40,
+        top: 80,
         right: 8,
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -630,9 +648,11 @@ class _CameraViewState extends State<CameraView> {
                     activeColor: Colors.white,
                     inactiveColor: Colors.white30,
                     onChanged: (value) async {
-                      setState(() {
-                        _currentExposureOffset = value;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _currentExposureOffset = value;
+                        });
+                      }
                       await _controller?.setExposureOffset(value);
                     },
                   ),
@@ -643,12 +663,21 @@ class _CameraViewState extends State<CameraView> {
         ),
       );
   Widget _captureButton() => Positioned(
-        bottom: 8,
-        left: MediaQuery.of(context).size.width / 2 -
-            25, // Adjust position as needed
+        // bottom: 20,
+        bottom: MediaQuery.of(context).size.height * 0.03, // 5% from the bottom
+
+        left: 0,
+        right: 0,
+        // left: MediaQuery.of(context).size.width / 2 -
+        //     25, // Adjust position as needed
         child: SizedBox(
-          height: 50.0,
-          width: 50.0,
+          height:
+              MediaQuery.of(context).size.width * 0.15, // 10% of screen width
+          width:
+              MediaQuery.of(context).size.width * 0.15, // 10% of screen width
+
+          // height: 50.0,
+          // width: 50.0,
           child: FloatingActionButton(
             heroTag: Object(),
             onPressed: () {
@@ -658,7 +687,10 @@ class _CameraViewState extends State<CameraView> {
             backgroundColor: Colors.black54,
             child: Icon(
               Icons.camera,
-              size: 25,
+              // size: 25,
+              size:
+                  MediaQuery.of(context).size.width * 0.1, // 5% of screen width
+
               color: Colors.white,
             ),
           ),
@@ -828,110 +860,31 @@ class _CameraViewState extends State<CameraView> {
     return null;
   }
 
-  // Future<void> _saveCapturedImage() async {
-  //   if (_capturedImagePath != null) {
-  //     try {
-  //       // Get the detected faces
-  //       final List<Face> faces = await _faceDetector
-  //           .processImage(InputImage.fromFilePath(_capturedImagePath!));
-
-  //       // Ensure there is at least one detected face
-  //       if (faces.isNotEmpty) {
-  //         // Use the bounding box from detectFacesOnCapturedImage
-  //         final Rect boundingBox = faces.first.boundingBox!;
-
-  //         // Load the full image
-  //         final File capturedImageFile = File(_capturedImagePath!);
-  //         final Uint8List imageBytes = await capturedImageFile.readAsBytes();
-  //         final ui.Image fullImage = await decodeImageFromList(imageBytes);
-
-  //         // Create a recorder to draw on the image
-  //         final recorder = ui.PictureRecorder();
-  //         final canvas = Canvas(recorder);
-
-  //         // Crop the image using the bounding box
-  //         final double left = boundingBox.left.toDouble();
-  //         final double top = boundingBox.top.toDouble();
-  //         final double width = boundingBox.width.toDouble();
-  //         final double height = boundingBox.height.toDouble();
-
-  //         // Draw the cropped region of interest (ROI) from the original image
-  //         canvas.drawImageRect(
-  //           fullImage,
-  //           Rect.fromPoints(
-  //             Offset(left, top),
-  //             Offset(left + width, top + height),
-  //           ),
-  //           Rect.fromPoints(Offset.zero, Offset(width, height)),
-  //           Paint(),
-  //         );
-
-  //         // Finish recording
-  //         final recordedImage = await recorder.endRecording().toImage(
-  //               width.toInt(),
-  //               height.toInt(),
-  //             );
-
-  //         // Convert the recorded image to bytes
-  //         final ByteData? byteData =
-  //             await recordedImage.toByteData(format: ui.ImageByteFormat.png);
-
-  //         if (byteData != null) {
-  //           final List<int> croppedImageBytes = byteData.buffer.asUint8List();
-
-  //           final String base64Image = base64Encode(croppedImageBytes);
-
-  //           // Get the app's local directory
-  //           final appDir = await getApplicationDocumentsDirectory();
-
-  //           // Generate a unique filename for the saved image
-  //           final uniqueFileName = DateTime.now().toIso8601String() + ".txt";
-
-  //           // Build the destination path
-  //           final destinationPath = appDir.path + "/" + uniqueFileName;
-
-  //           // Write the cropped image bytes to the destination path
-  //           // await File(destinationPath).writeAsBytes(croppedImageBytes);
-  //           await File(destinationPath).writeAsString(base64Image);
-  //           print("the base64 image is $base64Image");
-
-  //           // Optionally, you can display a message or perform other actions after saving
-  //           // For example: ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Image saved!")));
-  //         }
-  //       } else {
-  //         print("No face detected in the captured image.");
-  //         // Handle the case where no face is detected
-  //       }
-  //     } catch (e) {
-  //       // Handle errors during the save operation
-  //       print("Error saving image: $e");
-  //     }
-  //   }
-  // }
-
   void _captureImage() async {
-    try {
-      final XFile? imageFile = await _controller?.takePicture();
-      if (imageFile != null) {
-        _stopLiveFeed(); // Stop live feed after capturing
-        setState(() {
-          _capturedImagePath = imageFile.path;
-        });
-        _getCurrentLocation().then(
-          (value) {
-            // lat = '${value.latitude}';
-            // long = '${value.longitude}';
-            setState(() {
-              print("Lattitude value : $lat");
+    if (mounted) {
+      try {
+        final XFile? imageFile = await _controller?.takePicture();
+        if (imageFile != null) {
+          _stopLiveFeed(); // Stop live feed after capturing
+          setState(() {
+            _capturedImagePath = imageFile.path;
+          });
+          _getCurrentLocation().then(
+            (value) {
+              // lat = '${value.latitude}';
+              // long = '${value.longitude}';
+              setState(() {
+                print("Lattitude value : $lat");
 
-              print("Lattitude value : $long");
-            });
-          },
-        );
-        await _detectFacesOnCapturedImage();
+                print("Lattitude value : $long");
+              });
+            },
+          );
+          await _detectFacesOnCapturedImage();
+        }
+      } catch (e) {
+        print('Error capturing image: $e');
       }
-    } catch (e) {
-      print('Error capturing image: $e');
     }
   }
 

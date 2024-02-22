@@ -7,6 +7,7 @@ import 'package:swype/isar_services/isar_service.dart';
 import 'package:swype/models/add_activity.dart';
 import 'package:swype/models/check_in_model.dart';
 import 'package:swype/models/check_out_api_model.dart';
+import 'package:swype/models/geo_fence_model.dart';
 import 'package:swype/models/location_api_model.dart';
 import 'package:swype/models/login_api_model.dart';
 
@@ -138,35 +139,23 @@ class ApiServices {
     }
   }
 
-  Future<CheckOutApiModel> checkoutApi(
-    String acessToken,
-    String userId,
-    int locationId,
-    int exitReason,
-    String base64ImageString,
-  ) async {
-    print("checkoutApi called");
+  Future<GeoFenceModel> fetchUserInfo(String acessToken) async {
+    print(" fetch users info called form services");
     final response = await http.post(
-      Uri.parse(
-          'https://ckfoods.swypeuat.co.ukapi/api/front/staff_check_out_via_face'),
+      Uri.parse("https://ckfoods.swypeuat.co.uk/api/user/fetch_user_mobile"),
       headers: {
         'Authorization': 'Bearer $acessToken',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        "userId": userId,
-        "locationId": locationId,
-        "exitReason": exitReason,
-        "image": base64ImageString,
-      }),
     );
-    print("the response code for checkout api is :${response.statusCode}");
+    print(
+        "the response code for fetch user info api is :${response.statusCode}");
     if (response.statusCode == 200) {
-      return CheckOutApiModel.fromJson(
+      return GeoFenceModel.fromJson(
         jsonDecode(response.body),
       );
     } else {
-      throw Exception('Failed to load data');
+      throw Exception('Failed to load data from Geofence APi');
     }
   }
 

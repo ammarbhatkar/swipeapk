@@ -31,8 +31,10 @@ class FaceDetectorView extends StatefulWidget {
 class _FaceDetectorViewState extends State<FaceDetectorView> {
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
-      enableContours: true,
-      enableLandmarks: true,
+      //this is for drawing eyes ear dot maps on face
+      enableContours: false,
+
+      enableLandmarks: false,
     ),
   );
   bool _canProcess = true;

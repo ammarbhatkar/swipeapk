@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_print, use_build_context_synchronously, prefer_conditional_assignment
 
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -9,10 +10,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swype/components/dialogs/location_disabled.dart';
 import 'package:swype/components/out_of_radius.dart';
 import 'package:swype/constants/color_file.dart';
 import 'package:swype/isar_collections/activity_collection.dart';
+import 'package:swype/isar_collections/user_info_collection.dart';
 import 'package:swype/isar_services/isar_service.dart';
+import 'package:swype/models/geo_fence_model.dart';
 import 'package:swype/models/location_api_model.dart';
 import 'package:swype/components/check_in_container.dart';
 import 'package:swype/components/check_in_failed.dart';
@@ -20,7 +24,7 @@ import 'package:swype/components/new_text.dart';
 import 'package:swype/components/sucess_dialog.dart';
 import 'package:swype/models/show_activity_model.dart';
 import 'package:swype/services/location_service.dart';
-import 'package:swype/services/login_api_service.dart';
+import 'package:swype/services/api_services.dart';
 import 'package:swype/util/permision_denied_dialog.dart';
 import 'package:swype/drawerpages/app_drawer.dart';
 import 'package:swype/views/home_view.dart';
@@ -34,6 +38,11 @@ class NewHomeView extends StatefulWidget {
   // creat a falg to start and stop the timer
   bool? isCheckingIn = false;
   bool? isCheckingOut = false;
+  String? setFirstName;
+  String? setEmail;
+
+  //get the boolean flag
+  int? isGeoFencingEnabled;
   NewHomeView({
     super.key,
     this.isGranted,
@@ -80,6 +89,11 @@ class _NewHomeViewState extends State<NewHomeView> {
   //get email form Sprefre
   String? getEmail;
 
+  bool isFecthingUserInfo = false;
+  // String? setFirstName = "Loading . . .";
+  // String setEmail = "Loading . . .";
+  Duration getTotalCheckInTime = Duration();
+  DateTime? getLastCheckInTime;
   @override
   void initState() {
     print("teh email of user after log i is :${widget.email}");
@@ -120,9 +134,10 @@ class _NewHomeViewState extends State<NewHomeView> {
   void startTimer() {
     DateTime currentTime = DateTime.now();
 
-    print("the first check in time from checck-- IN is :${firstCheckInTime}");
-    if (firstCheckInTime != null) {
-      elapsedTime = currentTime.difference(firstCheckInTime ?? currentTime);
+    print("the total check in time from check-- IN is :${getTotalCheckInTime}");
+    if (getLastCheckInTime != null) {
+      elapsedTime = currentTime.difference(getLastCheckInTime ?? currentTime) +
+          (getTotalCheckInTime);
     }
     // Start the timer
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -144,11 +159,11 @@ class _NewHomeViewState extends State<NewHomeView> {
     // Reset the elapsed time
     if (mounted) {
       setState(() {
-        print("the first check in time from checkout is :${firstCheckInTime}");
-        if (firstCheckInTime != null) {
-          elapsedTime = DateTime.now().difference(firstCheckInTime!);
+        print(
+            "the total check in time from checkout is :${getTotalCheckInTime}");
+        if (getTotalCheckInTime != null) {
+          elapsedTime = getTotalCheckInTime;
         }
-        // elapsedTime = Duration();
         opacityLevel = 1.0; // Reset the opacity level
       });
     }
@@ -173,11 +188,13 @@ class _NewHomeViewState extends State<NewHomeView> {
         getAccessToken = loginData?.getString('acessToken');
         getEmail = loginData?.getString('email');
       });
-    }
-    var storedLocations = await isarService.getLocations();
-    if (storedLocations.isEmpty) {
-      // If not, fetch and store the locations
-      await fetchLocations(getAccessToken!);
+
+      await getUserInfoApi(getAccessToken!);
+      var storedLocations = await isarService.getLocations();
+      if (storedLocations.isEmpty) {
+        // If not, fetch and store the locations
+        await fetchLocations(getAccessToken!);
+      }
     }
     // await fetchActivities(getAccessToken!);
     // var locations = await fetchLocations(accessToken!);
@@ -193,26 +210,32 @@ class _NewHomeViewState extends State<NewHomeView> {
     return Scaffold(
       // backgroundColor: Theme.of(context).colorScheme.background,
       backgroundColor: Theme.of(context).colorScheme.tertiary,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.tertiary,
-        // automaticallyImplyLeading: false,
-        iconTheme: IconThemeData(
-            color: Theme.of(context).colorScheme.outline, size: 25),
-        // leadingWidth: 0,
 
-        elevation: 0,
-        actions: [],
-      ),
+      appBar: isFecthingUserInfo == true
+          ? null
+          : AppBar(
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
+              // automaticallyImplyLeading: false,
+              iconTheme: IconThemeData(
+                  color: Theme.of(context).colorScheme.outline, size: 25),
+              // leadingWidth: 0,
+
+              elevation: 0,
+              actions: [],
+            ),
       drawer: SizedBox(
         width: MediaQuery.of(context).size.width *
             0.8, // This line controls the width of the drawer
         child: MyDrawer(
-          email: getEmail ?? "",
+          // email: getEmail ?? "",
+          email: widget.setEmail ?? "loading . . .",
           loginData: loginData,
         ),
       ),
       body: Stack(
         children: [
+          // Show the spinner on top of everything when fetching user info
+
           Padding(
             padding: const EdgeInsets.only(
               left: 15,
@@ -234,10 +257,12 @@ class _NewHomeViewState extends State<NewHomeView> {
                 Row(
                   children: [
                     AppUText(
-                      text: "${getGreeting()}, ",
+                      text: "${getGreeting()} ",
                     ),
                     AppUText(
-                      text: "user",
+                      text: (widget.setFirstName != null)
+                          ? "${widget.setFirstName}, "
+                          : "loading . . .",
                       color: Theme.of(context).colorScheme.outline,
                       fontWeight: FontWeight.w700,
                     ),
@@ -254,64 +279,55 @@ class _NewHomeViewState extends State<NewHomeView> {
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Center(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          "assets/icons/emptyprofile.png",
-                          height: 80,
-                          color: Theme.of(context).colorScheme.inverseSurface,
-                        ),
-                        SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              // mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                AnimatedOpacity(
-                                  opacity: opacityLevel,
-                                  duration: Duration(seconds: 1),
-                                  child: Text(
-                                    "${elapsedTime.inHours.toString().padLeft(2, '0')}:${(elapsedTime.inMinutes % 60).toString().padLeft(2, '0')}",
-                                    style: GoogleFonts.openSans(
-                                      fontSize: 50,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .inverseSurface,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: Text(
-                                    "Hrs",
-                                    style: GoogleFonts.openSans(
-                                      fontSize: 18,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Image.asset(
+                        "assets/icons/emptyprofile.png",
+                        height: 80,
+                        color: Theme.of(context).colorScheme.inverseSurface,
+                      ),
+                      SizedBox(width: 10),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        // mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          AnimatedOpacity(
+                            opacity: opacityLevel,
+                            duration: Duration(seconds: 1),
+                            child: Text(
+                              "${elapsedTime.inHours.toString().padLeft(2, '0')}:${(elapsedTime.inMinutes % 60).toString().padLeft(2, '0')}",
+                              style: GoogleFonts.openSans(
+                                fontSize: 50,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inverseSurface,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                            AppUText(
-                              text: firstCheckInTime == null
-                                  ? "Check-In to start\n your day"
-                                  : "",
-                              fontWeight: FontWeight.w400,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              "Hrs",
+                              style: GoogleFonts.openSans(
+                                fontSize: 18,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                      // AppUText(
+                      //   text: firstCheckInTime == null
+                      //       ? "Check-In to start your day"
+                      //       : "",
+                      //   fontWeight: FontWeight.w400,
+                      // ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -357,8 +373,8 @@ class _NewHomeViewState extends State<NewHomeView> {
                                       time: DateFormat('hh:mm a')
                                           .format(DateTime.parse(event.time)),
                                       status: event.type == 1
-                                          ? "check-in"
-                                          : "check-out",
+                                          ? "Check-In"
+                                          : "Check-Out",
                                       location: event.locationName,
                                     ),
                                   );
@@ -379,80 +395,122 @@ class _NewHomeViewState extends State<NewHomeView> {
                       padding: EdgeInsets.only(bottom: 15, top: 15),
                     ),
                     onPressed: () async {
-                      // showDialog(
-                      //     context: context,
-                      //     builder: (context) => CustomFailedDialog());
+                      if (widget.isGeoFencingEnabled != null) {
+                        print("type check tapped");
+                        // showDialog(
+                        //     context: context,
+                        //     builder: (context) => CustomFailedDialog());
 
-                      var location = await Permission.location.request();
+                        var location = await Permission.location.request();
 
-                      if (location.isGranted) {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        // var locationData = await getCurrentLocation(context);
-                        if (isLoading == true) {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) {
-                              return
-                                  //  Dialog(
-                                  //   child:
-                                  SpinKitSpinningLines(color: primaryBlueColor);
-                              // child: new Row(
-                              //   mainAxisSize: MainAxisSize.min,
-                              //   children: [
-                              //     new CircularProgressIndicator(),
-                              //     new Text("Loading"),
-                              //   ],
-                              // ),
-                              // );
-                            },
-                          );
-                        }
-                        try {
-                          lastActivity == 1
-                              ? checkInType = 2
-                              : checkInType =
-                                  1; // Set checkInType based on isChekin
-                          LocationService locationService = LocationService();
-
-                          Map<String, dynamic>? positonData =
-                              await locationService.getCurrentLocation(context);
-                          if (positonData != null) {
-                            Navigator.pop(context);
+                        if (location.isGranted) {
+                          if (await Permission
+                              .locationWhenInUse.serviceStatus.isEnabled) {
                             setState(() {
-                              isLoading = false;
+                              isLoading = true;
                             });
-                            print("the position data is :${positonData}");
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (context) {
-                              return HomeView(
-                                locationId: positonData['id'],
-                                locationName: positonData['name'],
-                                lat: positonData['lat'],
-                                long: positonData['long'],
-                                acessToken: getAccessToken,
-                                type: checkInType,
-                              );
-                            }));
-                          } else {
-                            print("the position data is :${positonData}");
+                          }
+                          // Rest of your code...
+                          // } else {
+                          //   Permission.location.serviceStatus.isEnabled;
+                          //   // Show dialog asking the user to enable location services
+                          //   // showDialog(
+                          //   //   context: context,
+                          //   //   builder: (BuildContext context) {
+                          //   //     return LocationDisabledDialog();
+                          //   //   },
+                          //   // );
+                          //   // return;
+                          // }
+                          // var locationData = await getCurrentLocation(context);
+                          if (isLoading == true) {
                             showDialog(
                               context: context,
+                              barrierDismissible: false,
                               builder: (BuildContext context) {
-                                return OutOfRadiusDialog();
+                                return
+                                    //  Dialog(
+                                    //   child:
+                                    SpinKitSpinningLines(
+                                        color: primaryBlueColor);
+                                // child: new Row(
+                                //   mainAxisSize: MainAxisSize.min,
+                                //   children: [
+                                //     new CircularProgressIndicator(),
+                                //     new Text("Loading"),
+                                //   ],
+                                // ),
+                                // );
                               },
                             );
                           }
-                        } catch (e) {
-                          print("the error is :${e}");
+                          try {
+                            lastActivity == 1
+                                ? checkInType = 2
+                                : checkInType =
+                                    1; // Set checkInType based on isChekin
+                            LocationService locationService = LocationService();
+
+                            Map<String, dynamic>? positonData =
+                                await locationService.getCurrentLocation(
+                                    context, widget.isGeoFencingEnabled);
+                            log("isGeoFencingEnabled : ${widget.isGeoFencingEnabled}");
+                            if (positonData != null ||
+                                widget.isGeoFencingEnabled == 0) {
+                              Navigator.pop(context);
+                              setState(() {
+                                isLoading = false;
+                              });
+                              print("the position data is :${positonData}");
+                              // Navigator.push(context,
+                              //     MaterialPageRoute(builder: (context) {
+                              //   return HomeView(
+                              //     locationId: positonData?['id'],
+                              //     locationName: positonData?['name'],
+                              //     lat: positonData?['lat'],
+                              //     long: positonData?['long'],
+                              //     acessToken: getAccessToken,
+                              //     type: checkInType,
+                              //   );
+                              // }));
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => HomeView(
+                                            locationId: positonData?['id'],
+                                            locationName: positonData?['name'],
+                                            lat: positonData?['lat'],
+                                            long: positonData?['long'],
+                                            acessToken: getAccessToken,
+                                            type: checkInType,
+                                          ))).then(
+                                (value) => setState(() {}),
+                              );
+                            } else {
+                              Navigator.pop(context);
+                              setState(() {
+                                isLoading = false;
+                              });
+                              print("the position data is :${positonData}");
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return OutOfRadiusDialog();
+                                },
+                              );
+                            }
+                          } catch (e) {
+                            print("the error is :${e}");
+                          }
+                        } else if (location.isDenied) {
+                          print("Denied");
+                        } else {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return LocationDisabledDialog();
+                              });
                         }
-                      } else if (location.isDenied) {
-                        print("Denied");
-                      } else {
-                        DialogUtils.showPermissionDeniedDialog(
-                            context, "Location");
                       }
                     },
                     child: AppUText(
@@ -479,6 +537,17 @@ class _NewHomeViewState extends State<NewHomeView> {
             )
           else
             Container(),
+
+          if (isFecthingUserInfo == true)
+            Container(
+              color:
+                  Colors.white, // Optional: adds a semi-transparent background
+              child: Center(
+                child: SpinKitSpinningLines(
+                  color: primaryBlueColor,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -507,51 +576,6 @@ class _NewHomeViewState extends State<NewHomeView> {
     print("teh respomse is ${response}");
   }
 
-  // Future<void> fetchActivities(String acessToken) async {
-  //   print("fetch activities from home callled");
-  //   DateTime now = DateTime.now();
-  //   DateTime monthDate = DateTime(now.year, now.month - 1, now.day);
-  //   String endDate = DateFormat('yyyy-MM-dd').format(now);
-  //   String startDate = DateFormat('yyyy-MM-dd').format(monthDate);
-
-  //   ShowActivityModel response =
-  //       await apiService.fetchActivities(acessToken, startDate, endDate);
-  //   if (response.activities != null) {
-  //     print("the response of fetch activity is :${response.activities}");
-  //     print(response.activities?.length);
-  //     print(response.activities?[0].locationId);
-  //     for (var obj in response.activities!) {
-  //       isarService.addActivityToIsar(
-  //         // userId,
-  //         getEmail ?? "",
-  //         // locationName,
-  //         obj.locationName ?? "",
-  //         obj.locationId.toString(),
-  //         obj.type!,
-  //         obj.timestamp!,
-  //       );
-  //     }
-  //   }
-  // }
-  // _getActivities() {
-  //   isarService.getActivities().listen((value) {
-  //     setState(() {
-  //       checkEvents = value;
-  //       var lastActivityInfo = value.last;
-  //       lastActivity = lastActivityInfo.type;
-  //       var firstCheckIn = value.first;
-  //       firstCheckInTime = DateTime.parse(firstCheckIn.time);
-  //       print("the first check in time is nnnnnn :${firstCheckInTime}");
-
-  //       // Start or reset the timer here
-  //       if (widget.isCheckingIn == true) {
-  //         startTimer();
-  //       } else if (widget.isCheckingOut == true) {
-  //         resetTimer();
-  //       }
-  //     });
-  //   });
-  // }
   _getActivities() {
     isarService.getActivities().listen((value) {
       if (mounted) {
@@ -565,10 +589,31 @@ class _NewHomeViewState extends State<NewHomeView> {
           if (checkEvents.isNotEmpty) {
             var lastActivityInfo = checkEvents.last;
             lastActivity = lastActivityInfo.type;
+            getLastCheckInTime = DateTime.parse(lastActivityInfo.time);
             print("the last activity is from act :${lastActivityInfo.type}");
             var firstCheckIn = checkEvents.first;
             firstCheckInTime = DateTime.parse(firstCheckIn.time);
             print("the first check in time is nnnnnn :${firstCheckInTime}");
+
+            // Calculate the total check-in time
+            Duration totalCheckInTime = Duration();
+            DateTime? lastCheckInTime;
+            for (var activity in checkEvents) {
+              if (activity.type == 1) {
+                // Check-in
+                lastCheckInTime = DateTime.parse(activity.time);
+              } else if (activity.type == 2 && lastCheckInTime != null) {
+                // Check-out
+                totalCheckInTime +=
+                    DateTime.parse(activity.time).difference(lastCheckInTime);
+                lastCheckInTime = null;
+              }
+            }
+            setState(() {
+              getTotalCheckInTime = totalCheckInTime;
+            });
+            print(
+                "Total check-in time: ${totalCheckInTime.inHours} hours and ${totalCheckInTime.inMinutes % 60} minutes");
 
             // Start or reset the timer here
             if (widget.isCheckingIn == true || lastActivity == 1) {
@@ -579,6 +624,57 @@ class _NewHomeViewState extends State<NewHomeView> {
           }
         });
       }
+    });
+  }
+
+  Future<void> getUserInfoApi(String acessToken) async {
+    print("calling  user info api from fiel ");
+    setState(() {
+      isFecthingUserInfo = true;
+    });
+    ApiServices apiServices = ApiServices();
+    try {
+      GeoFenceModel response = await apiServices.fetchUserInfo(acessToken);
+      if (response != null) {
+        int userId = response.id ?? 0;
+        String firstName = response.firstName ?? "";
+        String lastName = response.lastName ?? "";
+        String email = response.email ?? "";
+        int isGeoFencingEnabled = response.isEnableGeofence ?? 1;
+        DateTime updateAt = DateTime.now();
+        print("the response of fetch user info is :${response}");
+        await isarService.addUserInfoToIsar(
+          userId,
+          firstName,
+          lastName,
+          email,
+          isGeoFencingEnabled,
+          updateAt,
+        );
+        // Retrieve the data from Isar
+        UserInfoCollection? userInfo =
+            await isarService.getUserInfoFromIsar(userId);
+        if (userInfo != null) {
+          // Use the data
+          setState(() {
+            widget.setFirstName = userInfo.firstName;
+            widget.setEmail = userInfo.email;
+            widget.isGeoFencingEnabled = userInfo.isGeoFencingEnabled;
+            print("the user info is :${userInfo.firstName}");
+            print("the user info is :${userInfo.email}");
+            print("the user geo  info is :${userInfo.isGeoFencingEnabled}");
+          });
+
+          print(
+              "User info from Isar: ${userInfo.firstName} ${userInfo.lastName}"
+              "${userInfo.email}");
+        }
+      }
+    } catch (e) {
+      throw e;
+    }
+    setState(() {
+      isFecthingUserInfo = false;
     });
   }
 }

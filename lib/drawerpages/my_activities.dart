@@ -76,7 +76,7 @@ class _MyActivitiesState extends State<MyActivities> {
                     ? Container(
                         child: Center(
                           child: Text(
-                            "No activity for today",
+                            "No activity for current month",
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -110,7 +110,7 @@ class _MyActivitiesState extends State<MyActivities> {
                                 // timeMeridem: "am",
                                 // timeMeridem: event.time >= 12 ? "PM" : "AM",
                                 status:
-                                    event.type == 1 ? "check-in" : "check-out",
+                                    event.type == 1 ? "Check-In" : "Check-Out",
                                 location: event.locationName,
                               ));
                         },

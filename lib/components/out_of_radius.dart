@@ -58,6 +58,7 @@ class CardDialog extends StatelessWidget {
           SizedBox(height: 20),
           Center(
             child: AppUText(
+              textAlign: TextAlign.center,
               text: "You are not within specified radius!",
             ),
           ),

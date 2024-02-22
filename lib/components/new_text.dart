@@ -6,11 +6,13 @@ class AppUText extends StatelessWidget {
   final Color? color;
   final FontWeight fontWeight;
   final double fontSize;
+  final TextAlign? textAlign;
   double? lineHeight;
   AppUText(
       {Key? key,
       required this.text,
       this.color,
+      this.textAlign,
       this.fontWeight = FontWeight.w600,
       this.fontSize = 18,
       this.lineHeight})
@@ -20,6 +22,7 @@ class AppUText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
+      textAlign: textAlign,
       style: GoogleFonts.openSans(
         fontSize: fontSize,
         color: color ?? Theme.of(context).colorScheme.scrim,

@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, avoid_print
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, avoid_print, empty_catches, unnecessary_brace_in_string_interps, unnecessary_null_comparison
 
 import 'dart:developer';
 
@@ -12,10 +12,11 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swype/constants/color_file.dart';
 import 'package:swype/isar_services/isar_service.dart';
+import 'package:swype/models/geo_fence_model.dart';
 import 'package:swype/models/login_api_model.dart';
 import 'package:swype/models/show_activity_model.dart';
 import 'package:swype/pages/configuration_view.dart';
-import 'package:swype/services/login_api_service.dart';
+import 'package:swype/services/api_services.dart';
 import 'package:swype/views/home_view.dart';
 import 'package:swype/views/new_home.dart';
 import 'package:swype/widgets/app_large_text.dart';
@@ -92,12 +93,11 @@ class _LoginViewState extends State<LoginView> {
       print("the password is $password");
 
       print("the reponse of api is $response");
+
+      // if login is sucessfull call teh api fetch activities.
       if (response.success == 'true') {
         String accessToken = response.accessToken ?? "";
-        await fetchActivities(
-          accessToken,
-          email,
-        );
+        await fetchActivities(accessToken, email);
         setState(() {
           if (isLoading) {
             Navigator.pop(context);
@@ -219,7 +219,7 @@ class _LoginViewState extends State<LoginView> {
     if (response.activities != null) {
       print("the response of fetch activity is :${response.activities}");
       print(response.activities?.length);
-      print(response.activities?[0].locationId);
+      // print(response.activities?[0].locationId);
       for (var obj in response.activities!) {
         await isarService.addActivityToIsar(
           // userId,
@@ -231,6 +231,25 @@ class _LoginViewState extends State<LoginView> {
           obj.timestamp!,
         );
       }
+    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NewHomeView(),
+      ),
+    );
+  }
+
+  Future<void> getUserInfoApi(String accessToken) async {
+    print("calling  user info api from fiel ");
+    ApiServices apiServices = ApiServices();
+    try {
+      GeoFenceModel response = await apiServices.fetchUserInfo(acessToken);
+      if (response != null) {
+        print("the response of fetch user info is :${response}");
+      }
+    } catch (e) {
+      throw e;
     }
   }
 

@@ -117,6 +117,76 @@ import 'dart:ui' as ui;
     }
   }
 
+  _getActivities() {
+    isarService.getActivities().listen((value) {
+      if (mounted) {
+        setState(() {
+          // Filter the activities by the specific date
+          checkEvents = value.where((activity) {
+            return activity.time.startsWith(currentDay) &&
+                activity.userId == getEmail;
+          }).toList();
+
+          if (checkEvents.isNotEmpty) {
+            var lastActivityInfo = checkEvents.last;
+            lastActivity = lastActivityInfo.type;
+            print("the last activity is from act :${lastActivityInfo.type}");
+            var firstCheckIn = checkEvents.first;
+            firstCheckInTime = DateTime.parse(firstCheckIn.time);
+            print("the first check in time is nnnnnn :${firstCheckInTime}");
+
+            // Start or reset the timer here
+            if (widget.isCheckingIn == true || lastActivity == 1) {
+              startTimer();
+            } else if (widget.isCheckingOut == true || lastActivity == 2) {
+              resetTimer();
+            }
+          }
+        });
+      }
+    });
+  }
+
+  
+  void startTimer() {
+    DateTime currentTime = DateTime.now();
+
+    print("the first check in time from checck-- IN is :${firstCheckInTime}");
+    if (firstCheckInTime != null) {
+      elapsedTime = currentTime.difference(firstCheckInTime ?? currentTime);
+    }
+    // Start the timer
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      // Update the elapsed time every second
+      if (mounted) {
+        setState(() {
+          elapsedTime += Duration(seconds: 1);
+          opacityLevel =
+              opacityLevel == 0 ? 1.0 : 0.0; // Toggle the opacity level
+        });
+      }
+    });
+  }
+
+  void resetTimer() {
+    // Cancel the timer
+    timer?.cancel();
+
+    // Reset the elapsed time
+    if (mounted) {
+      setState(() {
+        print("the first check in time from checkout is :${firstCheckInTime}");
+        if (firstCheckInTime != null) {
+          elapsedTime = DateTime.now().difference(firstCheckInTime!);
+        }
+        // elapsedTime = Duration();
+        opacityLevel = 1.0; // Reset the opacity level
+      });
+    }
+  }
+
+
+
 
 
 
